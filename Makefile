@@ -2,22 +2,25 @@
 ARCH=$(shell arch)
 
 # URL and Revision for Quagga to checkout
-QUAGGAGIT = https://git.netdef.org/scm/osr/quagga-capnproto.git
-QUAGGAREV = 0a4f547
-RELEASE = 7
+QUAGGAGIT = https://github.com/opensourcerouting/quagga-capnproto.git
+QUAGGAREV = 2706164
+RELEASE = 8
 
 # URL and Revision for ODL Thrift Interface
-QTHRIFTGIT = https://git.netdef.org/scm/osr/odlvpn2bgpd.git
+QTHRIFTGIT = https://github.com/opensourcerouting/odlvpn2bgpd.git
 QTHRIFTREV = b9ed3c7
 
 # URL for Python Thrift Library
-THRIFTPYGIT = https://git.netdef.org/scm/osr/thriftpy.git
+THRIFTPYGIT = https://github.com/opensourcerouting/thriftpy.git
+THRIFTPYREV = c7e6cb2
 
 # URL for Capnproto Library
-CAPNPROTOGIT = https://git.netdef.org/scm/osr/capnproto.git
+CAPNPROTOGIT = https://github.com/opensourcerouting/capnproto.git
+CAPNPROTOREV = 5f20b54
 
 # URL for Python Capnproto Interface
-PYCAPNPGIT = https://git.netdef.org/scm/osr/pycapnp.git
+PYCAPNPGIT = https://github.com/opensourcerouting/pycapnp.git
+PYCAPNPREV = 33ca5c1
 
 MKDIR = /bin/mkdir -p
 MV = /bin/mv
@@ -119,7 +122,7 @@ $(DEBPKGOUTPUT_DIR)/$(DEB_PACKAGES): $(DEPPKGDIR)/capnproto-deb
 	git clone $(QTHRIFTGIT) $(DEBPKGBUILD_DIR)/qthrift
 	cd $(DEBPKGBUILD_DIR)/qthrift; git checkout $(QTHRIFTREV)
 	# Pack Up Source
-	tar --exclude=".*" -czf opnfv-quagga_$(VERSION).orig.tar.gz $(DEBPKGBUILD_DIR)
+	tar --exclude=".git*" -czf opnfv-quagga_$(VERSION).orig.tar.gz $(DEBPKGBUILD_DIR)
 
 	# Build Debian Pkg Scripts and configs from templates
 	#
@@ -252,6 +255,7 @@ $(DEPPKGDIR)/capnproto-deb:
 	#
 	# Build debian package
 	git clone $(CAPNPROTOGIT) $(DEPPKGDIR)/capnproto
+	cd $(DEPPKGDIR)/capnproto; git checkout $(CAPNPROTOREV)
 	cd $(DEPPKGDIR)/capnproto; tar czf capnproto_0.5.99.orig.tar.gz c++
 	cd $(DEPPKGDIR)/capnproto/c++; $(DEBUILD) -us -uc
 	#
@@ -284,6 +288,7 @@ $(DEPPKGDIR)/capnproto-rpm:
 	#
 	# Build RPM package
 	git clone $(CAPNPROTOGIT) $(DEPPKGDIR)/capnproto
+	cd $(DEPPKGDIR)/capnproto; git checkout $(CAPNPROTOREV)
 	cd $(DEPPKGDIR)/capnproto/c++; autoreconf -i
 	cd $(DEPPKGDIR)/capnproto; tar czf capnproto_0.5.99.orig.tar.gz c++
 	cd $(DEPPKGDIR)/capnproto; $(INSTALL) -d rpmbuild/{SPECS,SOURCES,SRPMS,BUILD,RPMS/$(ARCH)}
@@ -319,7 +324,8 @@ $(DEPPKGDIR)/python-thriftpy-deb:
 	#
 	# Build debian package
 	git clone $(THRIFTPYGIT) $(DEPPKGDIR)/thriftpy
-	cd $(DEPPKGDIR)/thriftpy; $(GBP) buildpackage -us -uc
+	cd $(DEPPKGDIR)/thriftpy; git checkout $(THRIFTPYREV)
+	cd $(DEPPKGDIR)/thriftpy; $(GBP) buildpackage --git-ignore-branch -us -uc
 	#
 	# Save Package to Output Directory
 	$(MKDIR) $(DEBPKGOUTPUT_DIR)
@@ -344,6 +350,7 @@ $(DEPPKGDIR)/python-thriftpy-rpm:
 	#
 	# Build debian package
 	git clone $(THRIFTPYGIT) $(DEPPKGDIR)/thriftpy
+	cd $(DEPPKGDIR)/thriftpy; git checkout $(THRIFTPYREV)
 	cd $(DEPPKGDIR)/thriftpy; $(PATCH) < $(THISDIR)/patches/120-thriftpy-make-cython-optional.patch
 	cd $(DEPPKGDIR)/thriftpy; python setup.py bdist --formats=rpm
 	#
@@ -386,6 +393,7 @@ $(DEPPKGDIR)/python-pycapnp-deb: $(DEPPKGDIR)/capnproto-deb
 	#
 	# Build debian package
 	git clone $(PYCAPNPGIT) $(DEPPKGDIR)/pycapnp
+	cd $(DEPPKGDIR)/pycapnp; git checkout $(PYCAPNPREV)
 	# Remove capnproto build-dependency (we use temp unpacked version)
 	$(SED) -i 's|cython, capnproto, libcapnp-dev|cython|g' $(DEPPKGDIR)/pycapnp/debian/control
 	# Add capnproto library dependency
@@ -438,6 +446,7 @@ $(DEPPKGDIR)/python-pycapnp-rpm: $(DEPPKGDIR)/capnproto-rpm
 	#
 	# Build RPM package
 	git clone $(PYCAPNPGIT) $(DEPPKGDIR)/pycapnp
+	cd $(DEPPKGDIR)/pycapnp; git checkout $(PYCAPNPREV)
 	cd $(DEPPKGDIR)/pycapnp;$(PATCH) < $(THISDIR)/patches/210-pycapnp-MANIFEST-add-all-dirs.patch
 	# add local paths for building
 	cd $(DEPPKGDIR)/pycapnp; CPATH=/usr/include:$(TEMPDIR)/usr/include \
